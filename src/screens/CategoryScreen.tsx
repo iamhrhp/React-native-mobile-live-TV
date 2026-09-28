@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, RouteProp, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Play, Warning2 } from 'iconsax-react-native';
@@ -12,37 +13,42 @@ export const CategoryScreen = () => {
   const { title, channels } = route.params;
 
   const renderPortraitCard = ({ item }: { item: any }) => {
-    const isHttp = item.streamUrl && item.streamUrl.startsWith('http://');
-    const noStream = !item.streamUrl;
-    const hasIssue = isHttp || noStream;
+    try {
+      if (!item) return null;
+      const isHttp = item?.streamUrl && item.streamUrl.startsWith('http://');
+      const noStream = !item?.streamUrl;
+      const hasIssue = isHttp || noStream;
 
-    return (
-      <TouchableOpacity 
-        style={styles.portraitCard}
-        onPress={() => navigation.navigate('Player', { channel: item })}
-      >
-        <View style={styles.posterArea}>
-          <Text style={styles.posterTitle} numberOfLines={3}>{item.name}</Text>
-          
-          {hasIssue && (
-            <View style={styles.issueOverlay}>
-              <Warning2 size="18" color="#FF4444" variant="Bold" />
+      return (
+        <TouchableOpacity 
+          style={styles.portraitCard}
+          onPress={() => navigation.navigate('Player', { channel: item })}
+        >
+          <View style={styles.posterArea}>
+            <Text style={styles.posterTitle} numberOfLines={3}>{item?.name || 'Unknown'}</Text>
+            
+            {hasIssue && (
+              <View style={styles.issueOverlay}>
+                <Warning2 size="18" color="#FF4444" variant="Bold" />
+              </View>
+            )}
+
+            <View style={styles.playOverlay}>
+              <Play size="20" color="#FFF" variant="Bold" />
             </View>
-          )}
-
-          <View style={styles.playOverlay}>
-            <Play size="20" color="#FFF" variant="Bold" />
           </View>
-        </View>
-        <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
-      </TouchableOpacity>
-    );
+          <Text style={styles.cardName} numberOfLines={1}>{item?.name || 'Unknown'}</Text>
+        </TouchableOpacity>
+      );
+    } catch (e) {
+      return null;
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
       <FlatList
-        data={channels}
+        data={channels || []}
         numColumns={3}
         keyExtractor={item => item.id}
         renderItem={renderPortraitCard}
@@ -59,7 +65,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   columnWrapper: {
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 12,
     marginBottom: 20,
   },
   portraitCard: {

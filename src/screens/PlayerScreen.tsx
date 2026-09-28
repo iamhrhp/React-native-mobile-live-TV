@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, Platform, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, Platform, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import { ArrowLeft2 } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
+import Orientation from 'react-native-orientation-locker';
 
 export const PlayerScreen = ({ route }: any) => {
   const navigation = useNavigation();
@@ -13,6 +15,9 @@ export const PlayerScreen = ({ route }: any) => {
   const [errorMsg, setErrorMsg] = useState(isHttpOnIos ? 'HTTP streams are not currently working well on iOS.' : 'Stream is currently unavailable or unsupported.');
 
   React.useEffect(() => {
+    // Allow rotating the device freely while on the player screen
+    Orientation.unlockAllOrientations();
+
     let timeout: NodeJS.Timeout;
     if (loading && !error) {
       timeout = setTimeout(() => {
@@ -21,7 +26,11 @@ export const PlayerScreen = ({ route }: any) => {
         setErrorMsg('Stream timed out. It might be offline.');
       }, 10000); // 10 seconds timeout for IPTV streams
     }
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      // Always snap back to portrait when leaving this screen
+      Orientation.lockToPortrait();
+    };
   }, [loading, error]);
 
   return (
@@ -46,8 +55,16 @@ export const PlayerScreen = ({ route }: any) => {
             style={StyleSheet.absoluteFill}
             controls={true}
             resizeMode="contain"
+            fullscreenOrientation="landscape"
+            fullscreenAutorotate={true}
             onLoad={() => setLoading(false)}
             onReadyForDisplay={() => setLoading(false)}
+            onFullscreenPlayerWillPresent={() => {
+              Orientation.lockToLandscape();
+            }}
+            onFullscreenPlayerWillDismiss={() => {
+              Orientation.lockToPortrait();
+            }}
             onError={(e) => {
               console.log("Video playback error: ", e);
               setLoading(false);

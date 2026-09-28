@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Animated, View, Text, FlatList, TextInput, ActivityIndicator, StyleSheet, Button, ScrollView, TouchableOpacity, Modal, SafeAreaView } from 'react-native';
+import { Animated, View, Text, FlatList, TextInput, ActivityIndicator, StyleSheet, Button, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useChannels } from '../hooks/useChannels';
-import { Setting4, HambergerMenu, SearchNormal1, Play, Warning2, ArrowRight2 } from 'iconsax-react-native';
+import { Setting4, HambergerMenu, SearchNormal1, Play, Warning2, ArrowRight2, Heart } from 'iconsax-react-native';
 
 const FilterList = ({ data, selected, onSelect }: any) => (
   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
@@ -50,27 +51,27 @@ export const HomeScreen = () => {
 
   // Group channels by category
   const groupedChannels = React.useMemo(() => {
-    const groups: Record<string, any[]> = {
-      'FAVORITES': channels.filter(c => c.isFavorite)
-    };
+    const groups: Record<string, any[]> = {};
 
     const preferredOrder = ['sports', 'movies', 'movie', 'drama', 'entertainment', 'news', 'kids', 'music'];
 
     // Sort categories based on preferredOrder first, then alphabetically
-    const sortedCategories = [...categories.filter(c => c !== 'All')].sort((a, b) => {
-      const indexA = preferredOrder.indexOf(a.toLowerCase());
-      const indexB = preferredOrder.indexOf(b.toLowerCase());
+    const sortedCategories = [...categories?.filter(c => c !== 'All')].sort((a, b) => {
+      const indexA = preferredOrder?.indexOf(a?.toLowerCase());
+      const indexB = preferredOrder?.indexOf(b?.toLowerCase());
       if (indexA !== -1 && indexB !== -1) return indexA - indexB;
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
-      return a.localeCompare(b);
+      return a?.localeCompare(b) || 0;
     });
 
     // Pick top categories to display as rows
-    const topCategories = sortedCategories.slice(0, 10);
+    const topCategories = sortedCategories?.slice(0, 10) || [];
 
-    topCategories.forEach(cat => {
-      groups[cat.toUpperCase()] = channels.filter(c => c.categories.includes(cat));
+    topCategories?.forEach(cat => {
+      if (cat) {
+        groups[cat.toUpperCase()] = channels?.filter(c => c?.categories?.includes(cat)) || [];
+      }
     });
 
     return groups;
@@ -95,31 +96,43 @@ export const HomeScreen = () => {
   }
 
   const renderPortraitCard = ({ item }: { item: any }) => {
-    const isHttp = item.streamUrl && item.streamUrl.startsWith('http://');
-    const noStream = !item.streamUrl;
-    const hasIssue = isHttp || noStream;
+    try {
+      if (!item) return null;
+      const isHttp = item?.streamUrl && item.streamUrl.startsWith('http://');
+      const noStream = !item?.streamUrl;
+      const hasIssue = isHttp || noStream;
 
-    return (
-      <TouchableOpacity
-        style={styles.portraitCard}
-        onPress={() => navigation.navigate('Player', { channel: item })}
-      >
-        <View style={styles.posterArea}>
-          <Text style={styles.posterTitle} numberOfLines={3}>{item.name}</Text>
+      return (
+        <TouchableOpacity
+          style={styles.portraitCard}
+          onPress={() => navigation.navigate('Player', { channel: item })}
+        >
+          <View style={styles.posterArea}>
+            <Text style={styles.posterTitle} numberOfLines={3}>{item?.name || 'Unknown'}</Text>
 
-          {hasIssue && (
-            <View style={styles.issueOverlay}>
-              <Warning2 size="18" color="#FF4444" variant="Bold" />
+            {hasIssue && (
+              <View style={styles.issueOverlay}>
+                <Warning2 size="18" color="#FF4444" variant="Bold" />
+              </View>
+            )}
+
+            <TouchableOpacity 
+              style={styles.favoriteBtn}
+              onPress={() => toggleFavorite(item?.id)}
+            >
+              <Heart size="18" color={item?.isFavorite ? "#FF4444" : "#FFFFFF"} variant={item?.isFavorite ? "Bold" : "Linear"} />
+            </TouchableOpacity>
+
+            <View style={styles.playOverlay}>
+              <Play size="20" color="#FFF" variant="Bold" />
             </View>
-          )}
-
-          <View style={styles.playOverlay}>
-            <Play size="20" color="#FFF" variant="Bold" />
           </View>
-        </View>
-        <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
-      </TouchableOpacity>
-    );
+          <Text style={styles.cardName} numberOfLines={1}>{item?.name || 'Unknown'}</Text>
+        </TouchableOpacity>
+      );
+    } catch (e) {
+      return null;
+    }
   };
 
   const toggleSearch = () => {
@@ -233,7 +246,11 @@ export const HomeScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.pillBtn}
-            onPress={() => navigation.navigate('Category', { title: 'Favorites', channels: channels.filter(c => c.isFavorite) })}
+            onPress={() => {
+              try {
+                navigation.navigate('Category', { title: 'Favorites', channels: channels?.filter(c => c?.isFavorite) || [] });
+              } catch (e) { console.log(e); }
+            }}
           >
             <Text style={styles.pillText}>Favorites</Text>
           </TouchableOpacity>
@@ -330,6 +347,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
+  },
+  favoriteBtn: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   posterTitle: {
     color: '#2CCAD3',

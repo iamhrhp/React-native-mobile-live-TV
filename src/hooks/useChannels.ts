@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { fetchIptvData } from '../api/iptv';
 import { ChannelWithStream } from '../types';
 
@@ -22,6 +23,13 @@ export const useChannels = () => {
   }, [searchQuery]);
 
   useEffect(() => {
+    // Load favorites from encrypted storage
+    EncryptedStorage.getItem('favoriteChannels').then(saved => {
+      if (saved) {
+        setFavorites(new Set(JSON.parse(saved)));
+      }
+    }).catch(console.error);
+
     loadData();
   }, []);
 
@@ -63,6 +71,10 @@ export const useChannels = () => {
       const next = new Set(prev);
       if (next.has(channelId)) next.delete(channelId);
       else next.add(channelId);
+      
+      // Persist to encrypted storage securely
+      EncryptedStorage.setItem('favoriteChannels', JSON.stringify(Array.from(next))).catch(console.error);
+      
       return next;
     });
   };
