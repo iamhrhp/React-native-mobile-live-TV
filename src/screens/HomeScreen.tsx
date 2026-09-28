@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, ActivityIndicator, StyleSheet, Button, ScrollView, TouchableOpacity, Modal, SafeAreaView } from 'react-native';
+import { Animated, View, Text, FlatList, TextInput, ActivityIndicator, StyleSheet, Button, ScrollView, TouchableOpacity, Modal, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useChannels } from '../hooks/useChannels';
-import { ChannelCard } from '../components/ChannelCard';
 import { Setting4, HambergerMenu, SearchNormal1, Play, Warning2, ArrowRight2 } from 'iconsax-react-native';
 
 const FilterList = ({ data, selected, onSelect }: any) => (
   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
     {data.map((item: string) => (
-      <TouchableOpacity 
-        key={item} 
+      <TouchableOpacity
+        key={item}
         style={[styles.filterChip, selected === item && styles.filterChipActive]}
         onPress={() => onSelect(item)}
       >
@@ -22,15 +21,19 @@ const FilterList = ({ data, selected, onSelect }: any) => (
 export const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [searchActive, setSearchActive] = useState(false);
+  const searchAnimation = React.useRef(
+    new Animated.Value(0)
+  ).current;
+  const searchInputRef = React.useRef<TextInput>(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [tempCountry, setTempCountry] = useState('IN');
   const [tempCategory, setTempCategory] = useState('All');
-  const { 
-    channels, loading, refreshing, error, retry, 
+  const {
+    channels, loading, refreshing, error, retry,
     searchQuery, setSearchQuery,
     countries, selectedCountry, setSelectedCountry,
     categories, selectedCategory, setSelectedCategory,
-    toggleFavorite 
+    toggleFavorite
   } = useChannels();
 
   const openFilterModal = () => {
@@ -50,9 +53,9 @@ export const HomeScreen = () => {
     const groups: Record<string, any[]> = {
       'FAVORITES': channels.filter(c => c.isFavorite)
     };
-    
+
     const preferredOrder = ['sports', 'movies', 'movie', 'drama', 'entertainment', 'news', 'kids', 'music'];
-    
+
     // Sort categories based on preferredOrder first, then alphabetically
     const sortedCategories = [...categories.filter(c => c !== 'All')].sort((a, b) => {
       const indexA = preferredOrder.indexOf(a.toLowerCase());
@@ -62,14 +65,14 @@ export const HomeScreen = () => {
       if (indexB !== -1) return 1;
       return a.localeCompare(b);
     });
-    
+
     // Pick top categories to display as rows
     const topCategories = sortedCategories.slice(0, 10);
-    
+
     topCategories.forEach(cat => {
       groups[cat.toUpperCase()] = channels.filter(c => c.categories.includes(cat));
     });
-    
+
     return groups;
   }, [channels, categories]);
 
@@ -97,13 +100,13 @@ export const HomeScreen = () => {
     const hasIssue = isHttp || noStream;
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.portraitCard}
         onPress={() => navigation.navigate('Player', { channel: item })}
       >
         <View style={styles.posterArea}>
           <Text style={styles.posterTitle} numberOfLines={3}>{item.name}</Text>
-          
+
           {hasIssue && (
             <View style={styles.issueOverlay}>
               <Warning2 size="18" color="#FF4444" variant="Bold" />
@@ -119,6 +122,24 @@ export const HomeScreen = () => {
     );
   };
 
+  const toggleSearch = () => {
+    const open = !searchActive;
+
+    if (open) {
+      setSearchActive(true);
+    }
+
+    Animated.timing(searchAnimation, {
+      toValue: open ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished && !open) {
+        setSearchActive(false);
+      }
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
@@ -126,34 +147,57 @@ export const HomeScreen = () => {
         <TouchableOpacity>
           <HambergerMenu color="#FFFFFF" size="28" />
         </TouchableOpacity>
-        
-        <Text style={styles.logoText}>Moon Sky <Text style={{fontWeight: '400', fontSize: 16, color: '#8B9DAA'}}>TV</Text></Text>
-        
+
+        <Text style={styles.logoText}>Moon Sky <Text style={{ fontWeight: '400', fontSize: 16, color: '#8B9DAA' }}>TV</Text></Text>
+
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconCircle} onPress={openFilterModal}>
             <Setting4 color="#FFFFFF" size="20" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconCircle} onPress={() => setSearchActive(!searchActive)}>
+          <TouchableOpacity
+            style={styles.iconCircle}
+            onPress={toggleSearch}
+          >
             <SearchNormal1 color="#FFFFFF" size="20" />
           </TouchableOpacity>
         </View>
       </View>
 
       {searchActive && (
-        <View style={styles.searchRow}>
-          <TextInput 
-            style={styles.searchInput}
-            placeholder="Search channels..."
-            placeholderTextColor="#8B9DAA"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus
-          />
-        </View>
+        <Animated.View
+          style={[
+            styles.searchRow,
+            {
+              height: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 60],
+              }),
+              opacity: searchAnimation,
+              transform: [
+                {
+                  translateY: searchAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {searchActive && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search channels..."
+              placeholderTextColor="#8B9DAA"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          )}
+        </Animated.View>
       )}
-      
+
       {/* MAIN CONTENT */}
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -161,7 +205,7 @@ export const HomeScreen = () => {
           if (data.length === 0) return null;
           return (
             <View key={title} style={styles.categorySection}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.categoryTitleRow}
                 onPress={() => navigation.navigate('Category', { title, channels: data })}
               >
@@ -187,8 +231,8 @@ export const HomeScreen = () => {
           <TouchableOpacity style={[styles.pillBtn, styles.pillBtnActive]}>
             <Text style={styles.pillTextActive}>All</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.pillBtn} 
+          <TouchableOpacity
+            style={styles.pillBtn}
             onPress={() => navigation.navigate('Category', { title: 'Favorites', channels: channels.filter(c => c.isFavorite) })}
           >
             <Text style={styles.pillText}>Favorites</Text>
@@ -200,13 +244,13 @@ export const HomeScreen = () => {
         <TouchableOpacity style={styles.modalOverlay} onPress={() => setFilterModalVisible(false)} activeOpacity={1}>
           <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
             <Text style={styles.modalTitle}>Filter Channels</Text>
-            
+
             <Text style={styles.filterLabel}>Country</Text>
             <FilterList data={countries} selected={tempCountry} onSelect={setTempCountry} />
-            
+
             <Text style={styles.filterLabel}>Category</Text>
             <FilterList data={categories} selected={tempCategory} onSelect={setTempCategory} />
-            
+
             <TouchableOpacity style={styles.applyBtn} onPress={applyFilters}>
               <Text style={styles.applyBtnText}>Apply Filters</Text>
             </TouchableOpacity>
@@ -365,12 +409,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 10,
   },
-  searchInput: { 
+  searchInput: {
     flex: 1,
-    backgroundColor: '#11222E', 
+    backgroundColor: '#11222E',
     color: '#FFFFFF',
-    padding: 14, 
-    borderRadius: 12, 
+    padding: 14,
+    borderRadius: 12,
     fontSize: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
@@ -386,24 +430,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterScroll: { paddingHorizontal: 16, marginBottom: 16 },
-  filterChip: { 
-    paddingHorizontal: 20, 
-    paddingVertical: 10, 
-    backgroundColor: '#0B1319', 
-    borderRadius: 24, 
-    marginRight: 10, 
+  filterChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#0B1319',
+    borderRadius: 24,
+    marginRight: 10,
     height: 40,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  filterChipActive: { 
-    backgroundColor: '#2CCAD3', 
+  filterChipActive: {
+    backgroundColor: '#2CCAD3',
     borderColor: '#2CCAD3',
   },
   filterText: { color: '#8B9DAA', fontWeight: '500' },
   filterTextActive: { color: '#0B1319', fontWeight: 'bold' },
   list: { paddingHorizontal: 16, paddingBottom: 20 },
-  
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
