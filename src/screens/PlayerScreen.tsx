@@ -14,11 +14,20 @@ export const PlayerScreen = ({ route }: any) => {
   const [error, setError] = useState(isHttpOnIos);
   const [errorMsg, setErrorMsg] = useState(isHttpOnIos ? 'HTTP streams are not currently working well on iOS.' : 'Stream is currently unavailable or unsupported.');
 
-  React.useEffect(() => {
-    // Allow rotating the device freely while on the player screen
-    Orientation.unlockAllOrientations();
+  const videoRef = React.useRef<any>(null);
 
-    let timeout: NodeJS.Timeout;
+  React.useEffect(() => {
+    // Keep app in portrait by default
+    Orientation.lockToPortrait();
+
+    return () => {
+      // Ensure it stays portrait when leaving
+      Orientation.lockToPortrait();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
     if (loading && !error) {
       timeout = setTimeout(() => {
         setLoading(false);
@@ -28,42 +37,55 @@ export const PlayerScreen = ({ route }: any) => {
     }
     return () => {
       clearTimeout(timeout);
-      // Always snap back to portrait when leaving this screen
-      Orientation.lockToPortrait();
     };
   }, [loading, error]);
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.headerSafeArea}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft2 size="28" color="#FFFFFF" />
-        </TouchableOpacity>
-      </SafeAreaView>
-
       {loading && !error && (
         <ActivityIndicator size="large" color="#fff" style={styles.loader} />
       )}
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{errorMsg}</Text>
+          <TouchableOpacity 
+            style={{ marginTop: 20, padding: 12, paddingHorizontal: 30, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 25 }} 
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={StyleSheet.absoluteFill} pointerEvents={loading ? 'none' : 'auto'}>
           <Video
+            ref={videoRef}
             source={{ uri: channel?.streamUrl }}
             style={StyleSheet.absoluteFill}
             controls={true}
             resizeMode="contain"
-            fullscreenOrientation="landscape"
             fullscreenAutorotate={true}
             onLoad={() => setLoading(false)}
-            onReadyForDisplay={() => setLoading(false)}
+            onReadyForDisplay={() => {
+              setLoading(false);
+              if (Platform.OS === 'ios') {
+                videoRef.current?.presentFullscreenPlayer();
+              }
+            }}
             onFullscreenPlayerWillPresent={() => {
-              Orientation.lockToLandscape();
+              // Instead of forcefully breaking the OS rotation lock, simply unlock the 
+              // orientation so the user can physically rotate their phone to go landscape!
+              Orientation.unlockAllOrientations();
             }}
             onFullscreenPlayerWillDismiss={() => {
               Orientation.lockToPortrait();
+            }}
+            onFullscreenPlayerDidDismiss={() => {
+              Orientation.lockToPortrait();
+              if (Platform.OS === 'ios') {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                }
+              }
             }}
             onError={(e) => {
               console.log("Video playback error: ", e);
@@ -81,16 +103,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   headerSafeArea: {
     position: 'absolute',
-    top: 100,
-    left: 0,
-    zIndex: 9999,
+    top: 120,
+    left: 20,
+    zIndex: 99999,
+    elevation: 10,
   },
   backButton: {
-    padding: 16,
-    width: 60,
-    height: 60,
+    padding: 12,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 25,
   },
   loader: { position: 'absolute', alignSelf: 'center', zIndex: 10 },
   errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },

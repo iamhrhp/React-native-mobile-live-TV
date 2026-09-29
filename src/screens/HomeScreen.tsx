@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Animated, View, Text, FlatList, TextInput, ActivityIndicator, StyleSheet, Button, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useChannels } from '../hooks/useChannels';
 import { Setting4, HambergerMenu, SearchNormal1, Play, Warning2, ArrowRight2, Heart } from 'iconsax-react-native';
+import Orientation from 'react-native-orientation-locker';
 
 const FilterList = ({ data, selected, onSelect }: any) => (
   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
@@ -21,6 +22,20 @@ const FilterList = ({ data, selected, onSelect }: any) => (
 
 export const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      // Always guarantee the home screen is strictly portrait when returning from video
+      Orientation.lockToPortrait();
+      // iOS aggressively ignores orientation locks while dismissing native video players. 
+      // We run it again after the transition is completely finished (500ms) to force it.
+      const timer = setTimeout(() => {
+        Orientation.lockToPortrait();
+      }, 500);
+      return () => clearTimeout(timer);
+    }, [])
+  );
+  
   const [searchActive, setSearchActive] = useState(false);
   const searchAnimation = React.useRef(
     new Animated.Value(0)

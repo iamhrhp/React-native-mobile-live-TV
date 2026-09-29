@@ -64,7 +64,7 @@ export default function App() {
         <Stack.Screen 
           name="Player" 
           component={PlayerScreen} 
-          options={{ headerShown: false }}
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen 
           name="Category" 
