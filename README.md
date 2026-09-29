@@ -1,97 +1,58 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Moon Sky TV 🌙📺
 
-# Getting Started
+Moon Sky TV is a premium, cross-platform IPTV application built with React Native. It allows users to seamlessly browse, filter, and stream live television channels directly from their mobile devices with a beautiful and modern user interface.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features ✨
+- **Live IPTV Streaming:** Watch live TV channels using HLS (`.m3u8`) streaming protocols.
+- **Native Video Player:** Integrated with high-performance native video players for both iOS (`AVPlayer`) and Android (`ExoPlayer`) for buttery smooth playback.
+- **Orientation Management:** Smart rotation handling. The app stays in portrait mode for browsing, but gracefully allows landscape viewing when watching full-screen video.
+- **Dynamic Categories:** Automatically groups channels by categories (e.g., Sports, Movies, News).
+- **Favorites System:** Easily favorite your most-watched channels for quick access.
+- **Search Functionality:** Instantly search through hundreds of channels with a smooth, animated search bar.
+- **Cross-Platform:** Beautifully designed to work flawlessly on both iOS and Android.
 
-## Step 1: Start Metro
+## Tech Stack 🛠
+- **Framework:** [React Native](https://reactnative.dev/) (TypeScript)
+- **Navigation:** [React Navigation](https://reactnavigation.org/)
+- **Video Playback:** [react-native-video](https://github.com/react-native-video/react-native-video)
+- **Orientation:** [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker)
+- **Icons:** [iconsax-react-native](https://github.com/vuesax/iconsax-react-native)
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Getting Started 🚀
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Prerequisites
+Make sure your development environment is set up for React Native (Node.js, Watchman, Xcode for iOS, and Android Studio for Android). 
 
-```sh
-# Using npm
-npm start
+### Installation
 
-# OR using Yarn
-yarn start
-```
+1. **Clone the repository and install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## Step 2: Build and run your app
+2. **Install iOS Pods:**
+   ```bash
+   cd ios
+   pod install
+   cd ..
+   ```
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### Running the App
 
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+**For iOS:**
+```bash
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+**For Android:**
+```bash
+npm run android
+```
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Troubleshooting 🔧
+- **iOS Build Errors:** If you experience issues building on iOS, ensure your Pods are up to date by running `cd ios && pod install --repo-update`.
+- **Android Icon Issues:** If you modify the app icons, ensure you clean the build cache (`cd android && ./gradlew clean`) before running the app again.
+- **Stream Issues on iOS:** HTTP (non-HTTPS) streams are blocked by default on iOS. Ensure you are using HTTPS streams or that `NSAppTransportSecurity` is properly configured in your `Info.plist`.
 
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## License 📄
+This project is proprietary and confidential.
